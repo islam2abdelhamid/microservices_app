@@ -1,23 +1,40 @@
 import express from 'express';
-const app = express();
+import 'express-async-errors';
+import { json } from 'body-parser';
+import mongoose from 'mongoose';
 
-import { currentUserRouter, signinRouter, signoutRouter,signupRouter } from "./routes";
+import { currentUserRouter } from './routes/current-user';
+import { signinRouter } from './routes/signin';
+import { signoutRouter } from './routes/signout';
+import { signupRouter } from './routes/signup';
+import { errorHandler } from './middlewares/error-handler';
+import { NotFoundError } from './errors/not-found-error';
+
+const app = express();
+app.use(json());
 
 app.use(currentUserRouter);
 app.use(signinRouter);
 app.use(signoutRouter);
 app.use(signupRouter);
 
-app.get('/api/users', (req, res) => {
-    console.log('request received');
-    res.send('GET request to the homepage');
+app.all('*', async (req, res) => {
+  throw new NotFoundError();
 });
 
-app.get('/api/users/current', (req, res) => {
-    console.log('request received');
-    res.send('GET request to the homepage');
-});
+app.use(errorHandler);
+
+const start = async () => {
+  try {
+    await mongoose.connect('mongodb://auth-mongo-srv:27017');
+    console.log('connected to mongodb');
+  } catch (error) {
+    console.log("🚀 ~ file: index.ts ~ line 31 ~ start ~ error", error);
+  }
+}
 
 app.listen(3000, () => {
-    console.log("listening on port 3000!");
+  console.log('Listening on port 3000!!!!!!!!');
 });
+
+start();
